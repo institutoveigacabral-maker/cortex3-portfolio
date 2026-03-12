@@ -6,6 +6,29 @@ import { VERTICALS, STAGES } from "@/data/verticalDefinitions";
 import { PROJECTS_SEED } from "@/data/projectsSeed";
 import { calculateReadinessScore, generateRecommendations, getPortfolioStats, type Project, type ProjectToolStatus, type ToolStatus } from "@/lib/commercializationEngine";
 import { analyzePortfolio, type InsightType, type InsightSeverity } from "@/lib/portfolioIntelligence";
+import Tooltip from "@/components/Tooltip";
+
+// Tooltip descriptions for summary cards, stages, priorities, etc.
+const TIPS = {
+  totalProjects: "Total de projetos nao arquivados no portfolio. Inclui todas as verticais e estagios.",
+  avgScore: "Media do Readiness Score de todos os projetos. Calculado com base em 5 dimensoes: Fundacao (25%), Descoberta (25%), Monetizacao (20%), Conteudo (15%) e Operacoes (15%).",
+  stageIdea: "Conceito inicial. Ainda nao tem produto, site ou presenca digital. Foco: validar a ideia antes de investir em ferramentas.",
+  stageMvp: "Produto minimo viavel em desenvolvimento. Ja comecou a construir mas ainda nao esta no ar pro publico.",
+  stageLive: "Projeto no ar com usuarios reais. Momento critico pra configurar tracking, analytics e presenca digital.",
+  stageScaling: "Crescendo e otimizando. Precisa de ferramentas avancadas pra escalar: Ads, Looker Studio, automacoes.",
+  topGaps: "Ferramentas que mais projetos estao sem. Resolver essas lacunas tem o maior impacto no portfolio inteiro.",
+  scoreRing: "Readiness Score (0-100). Vermelho: <30 (critico), Amarelo: 30-59 (atencao), Verde: 60+ (saudavel). Baseado nas ferramentas Google configuradas.",
+  priority: "Projeto marcado como prioridade alta. Deve receber atencao antes dos demais.",
+  criticalAction: "Acao urgente. Sem isso o projeto esta invisivel ou sem dados basicos.",
+  highAction: "Acao importante. Melhora significativamente a presenca ou monetizacao.",
+  mediumAction: "Acao recomendada. Otimiza o que ja existe e melhora eficiencia.",
+  lowAction: "Acao opcional. Agrega valor mas nao e urgente.",
+  toolStatus: "Status da ferramenta neste projeto. Pendente = nao comecou. Em andamento = configurando. Configurado = pronto mas sem uso ativo. Ativo = funcionando e gerando dados. Problema = com erro.",
+  portfolioHealth: "Indice de saude geral do portfolio (0-100). Leva em conta: insights criticos (-15 pts cada), projetos com receita (+5 pts cada), projetos ativos (+3 pts cada) e score medio de readiness.",
+  concentration: "Mede o quanto o esforco esta concentrado (0-100). Alto = poucos projetos recebem foco. Baixo = esforco disperso em muitos projetos — risco de nenhum ganhar tracao.",
+  pipeline: "Distribuicao dos projetos por estagio. Mostra gargalos: se tem muito mais projetos em Ideia/MVP do que em Live/Scaling, algo esta travando a execucao.",
+  matrixDot: "Cada ponto mostra o status de uma ferramenta Google naquele projeto. Verde = ativo, Azul = configurado, Amarelo = em andamento, Vermelho = problema, Cinza = pendente.",
+} as const;
 
 // localStorage persistence
 const STORAGE_KEY = "cortex3_portfolio";
@@ -124,28 +147,39 @@ export default function PortfolioDashboard() {
       <div className="max-w-7xl mx-auto px-5 py-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
-          <div className="rounded-xl border border-border/30 bg-card/40 p-4">
-            <p className="text-2xl font-bold">{stats.total}</p>
-            <p className="text-xs text-muted-foreground">Projetos ativos</p>
-          </div>
-          <div className="rounded-xl border border-border/30 bg-card/40 p-4">
-            <p className="text-2xl font-bold text-primary">{stats.avgScore}<span className="text-sm text-muted-foreground">/100</span></p>
-            <p className="text-xs text-muted-foreground">Score medio</p>
-          </div>
-          {STAGES.map((s) => (
-            <div key={s.id} className="rounded-xl border border-border/30 bg-card/40 p-4">
-              <p className="text-2xl font-bold">{stats.byStage[s.id as keyof typeof stats.byStage] || 0}</p>
-              <p className="text-xs text-muted-foreground">{s.label}</p>
+          <Tooltip content={TIPS.totalProjects}>
+            <div className="rounded-xl border border-border/30 bg-card/40 p-4 cursor-help w-full">
+              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-xs text-muted-foreground">Projetos ativos</p>
             </div>
-          ))}
+          </Tooltip>
+          <Tooltip content={TIPS.avgScore}>
+            <div className="rounded-xl border border-border/30 bg-card/40 p-4 cursor-help w-full">
+              <p className="text-2xl font-bold text-primary">{stats.avgScore}<span className="text-sm text-muted-foreground">/100</span></p>
+              <p className="text-xs text-muted-foreground">Score medio</p>
+            </div>
+          </Tooltip>
+          {STAGES.map((s) => {
+            const stageTip = s.id === "idea" ? TIPS.stageIdea : s.id === "mvp" ? TIPS.stageMvp : s.id === "live" ? TIPS.stageLive : TIPS.stageScaling;
+            return (
+              <Tooltip key={s.id} content={stageTip}>
+                <div className="rounded-xl border border-border/30 bg-card/40 p-4 cursor-help w-full">
+                  <p className="text-2xl font-bold">{stats.byStage[s.id as keyof typeof stats.byStage] || 0}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              </Tooltip>
+            );
+          })}
         </div>
 
         {/* Top Gaps */}
         {stats.topGaps.length > 0 && (
           <div className="mb-8 rounded-xl border border-orange-500/20 bg-orange-500/5 p-4">
-            <p className="text-sm font-semibold text-orange-400 mb-2 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" /> Maiores lacunas no portfolio
-            </p>
+            <Tooltip content={TIPS.topGaps} position="bottom">
+              <p className="text-sm font-semibold text-orange-400 mb-2 flex items-center gap-2 cursor-help">
+                <AlertTriangle className="h-4 w-4" /> Maiores lacunas no portfolio
+              </p>
+            </Tooltip>
             <div className="flex flex-wrap gap-2">
               {stats.topGaps.map((gap) => (
                 <span key={gap.toolId} className="rounded-full bg-orange-500/10 border border-orange-500/20 px-3 py-1 text-xs text-orange-300">
@@ -225,13 +259,15 @@ export default function PortfolioDashboard() {
                         <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{project.description}</p>
                       </div>
                       {/* Score ring */}
-                      <div className="relative h-11 w-11 shrink-0 ml-3">
-                        <svg viewBox="0 0 36 36" className="h-11 w-11 -rotate-90">
-                          <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted/20" />
-                          <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray={`${score * 0.975} 100`} className={score >= 60 ? "text-green-500" : score >= 30 ? "text-yellow-500" : "text-red-500"} strokeLinecap="round" />
-                        </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">{score}</span>
-                      </div>
+                      <Tooltip content={TIPS.scoreRing} position="left">
+                        <div className="relative h-11 w-11 shrink-0 ml-3 cursor-help">
+                          <svg viewBox="0 0 36 36" className="h-11 w-11 -rotate-90">
+                            <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted/20" />
+                            <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray={`${score * 0.975} 100`} className={score >= 60 ? "text-green-500" : score >= 30 ? "text-yellow-500" : "text-red-500"} strokeLinecap="round" />
+                          </svg>
+                          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">{score}</span>
+                        </div>
+                      </Tooltip>
                     </div>
 
                     <div className="flex items-center gap-1.5 mt-2">
@@ -241,13 +277,15 @@ export default function PortfolioDashboard() {
                       <span className="rounded-full bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground">
                         {vertical?.label}
                       </span>
-                      {project.priority >= 2 && <span className="rounded-full bg-red-500/10 text-red-400 px-2 py-0.5 text-[10px] font-medium">Prioridade</span>}
+                      {project.priority >= 2 && <Tooltip content={TIPS.priority}><span className="rounded-full bg-red-500/10 text-red-400 px-2 py-0.5 text-[10px] font-medium cursor-help">Prioridade</span></Tooltip>}
                     </div>
 
                     {topRec && (
-                      <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] ${PRIORITY_COLORS[topRec.priority]}`}>
-                        <span className="font-medium">{topRec.priority.toUpperCase()}:</span> {topRec.title}
-                      </div>
+                      <Tooltip content={topRec.priority === "critical" ? TIPS.criticalAction : topRec.priority === "high" ? TIPS.highAction : topRec.priority === "medium" ? TIPS.mediumAction : TIPS.lowAction} position="bottom">
+                        <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] cursor-help w-full ${PRIORITY_COLORS[topRec.priority]}`}>
+                          <span className="font-medium">{topRec.priority.toUpperCase()}:</span> {topRec.title}
+                        </div>
+                      </Tooltip>
                     )}
                   </div>
 
@@ -277,7 +315,9 @@ export default function PortfolioDashboard() {
                       </div>
 
                       {/* Tool statuses */}
-                      <p className="text-[11px] text-muted-foreground font-medium">Google Tools:</p>
+                      <Tooltip content={TIPS.toolStatus} position="right">
+                        <p className="text-[11px] text-muted-foreground font-medium cursor-help inline-block">Google Tools:</p>
+                      </Tooltip>
                       <div className="space-y-1.5">
                         {GOOGLE_TOOLS.slice(0, 10).map((tool) => {
                           const ts = project.toolStatuses.find((t) => t.toolId === tool.id);
@@ -346,9 +386,11 @@ export default function PortfolioDashboard() {
                 rel="noopener noreferrer"
                 className={`flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-muted/10 transition-colors ${PRIORITY_COLORS[rec.priority]}`}
               >
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${PRIORITY_COLORS[rec.priority]}`}>
-                  {rec.priority}
-                </span>
+                <Tooltip content={rec.priority === "critical" ? TIPS.criticalAction : rec.priority === "high" ? TIPS.highAction : rec.priority === "medium" ? TIPS.mediumAction : TIPS.lowAction} position="right">
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase cursor-help ${PRIORITY_COLORS[rec.priority]}`}>
+                    {rec.priority}
+                  </span>
+                </Tooltip>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{rec.title}</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{project.name} — {rec.reason}</p>
@@ -370,7 +412,9 @@ export default function PortfolioDashboard() {
               <div className="rounded-xl border border-border/30 bg-card/40 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Activity className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Saude do Portfolio</span>
+                  <Tooltip content={TIPS.portfolioHealth} position="bottom">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-help">Saude do Portfolio</span>
+                  </Tooltip>
                 </div>
                 <div className="flex items-end gap-2">
                   <span className={`text-4xl font-bold ${intelligence.portfolioHealth >= 60 ? "text-green-500" : intelligence.portfolioHealth >= 35 ? "text-yellow-500" : "text-red-500"}`}>
@@ -386,7 +430,9 @@ export default function PortfolioDashboard() {
               <div className="rounded-xl border border-border/30 bg-card/40 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Target className="h-4 w-4 text-orange-400" />
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Concentracao</span>
+                  <Tooltip content={TIPS.concentration} position="bottom">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-help">Concentracao</span>
+                  </Tooltip>
                 </div>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-bold text-foreground">{intelligence.concentrationIndex}</span>
@@ -400,7 +446,9 @@ export default function PortfolioDashboard() {
               <div className="rounded-xl border border-border/30 bg-card/40 p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="h-4 w-4 text-blue-400" />
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pipeline</span>
+                  <Tooltip content={TIPS.pipeline} position="bottom">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-help">Pipeline</span>
+                  </Tooltip>
                 </div>
                 <div className="flex items-center gap-1 mt-1">
                   {intelligence.pipeline.map((stage, si) => (
@@ -680,13 +728,15 @@ export default function PortfolioDashboard() {
                 })}
               </tbody>
             </table>
-            <div className="flex items-center gap-4 mt-4 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-green-500" /> Ativo</span>
-              <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-blue-500" /> Configurado</span>
-              <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-yellow-500" /> Em andamento</span>
-              <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-red-500" /> Problema</span>
-              <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-muted/50" /> Pendente</span>
-            </div>
+            <Tooltip content={TIPS.matrixDot} position="top">
+              <div className="flex items-center gap-4 mt-4 text-[10px] text-muted-foreground cursor-help">
+                <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-green-500" /> Ativo</span>
+                <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-blue-500" /> Configurado</span>
+                <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-yellow-500" /> Em andamento</span>
+                <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-red-500" /> Problema</span>
+                <span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-muted/50" /> Pendente</span>
+              </div>
+            </Tooltip>
           </div>
         )}
       </div>
