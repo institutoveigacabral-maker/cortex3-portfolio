@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 25% 10%;
+    --card: 210 20% 97%;
+    --card-foreground: 220 25% 10%;
+    --primary: 205 100% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 18% 93%;
+    --secondary-foreground: 220 20% 18%;
+    --muted: 210 16% 94%;
+    --muted-foreground: 215 15% 38%;
+    --accent: 185 85% 32%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 75% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 18% 88%;
+    --input: 210 18% 88%;
+    --ring: 205 100% 35%;
+    --radius: 0.875rem;
+  }
+
+  .dark {
+    --background: 225 20% 4%;
+    --foreground: 210 20% 92%;
+    --card: 225 16% 7%;
+    --card-foreground: 210 20% 92%;
+    --primary: 205 100% 55%;
+    --primary-foreground: 225 20% 4%;
+    --secondary: 225 14% 11%;
+    --secondary-foreground: 210 20% 85%;
+    --muted: 225 14% 13%;
+    --muted-foreground: 215 12% 50%;
+    --accent: 185 80% 50%;
+    --accent-foreground: 225 20% 4%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 225 14% 12%;
+    --input: 225 14% 12%;
+    --ring: 205 100% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  a, button, input, textarea, select {
+    @apply transition-colors duration-200;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/60 ring-offset-2 ring-offset-background;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
