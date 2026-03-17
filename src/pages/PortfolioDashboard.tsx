@@ -1,10 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
 // standalone project — no router links needed
-import { Search, Plus, ArrowRight, ExternalLink, ChevronDown, ChevronRight, LayoutGrid, List, AlertTriangle, CheckCircle2, Clock, Zap, Filter, Brain, TrendingUp, Globe, Link2, Target, Activity, ArrowUpRight, Shield, Lightbulb, Network } from "lucide-react";
+import { Search, ArrowRight, ExternalLink, ChevronDown, LayoutGrid, List, AlertTriangle, Clock, Zap, Brain, TrendingUp, Globe, Link2, Target, Activity, ArrowUpRight, Shield, Lightbulb, Network } from "lucide-react";
 import { GOOGLE_TOOLS } from "@/data/googleToolsRegistry";
 import { VERTICALS, STAGES } from "@/data/verticalDefinitions";
 import { PROJECTS_SEED } from "@/data/projectsSeed";
-import { calculateReadinessScore, generateRecommendations, getPortfolioStats, type Project, type ProjectToolStatus, type ToolStatus } from "@/lib/commercializationEngine";
+import { calculateReadinessScore, generateRecommendations, getPortfolioStats, type Project, type ToolStatus } from "@/lib/commercializationEngine";
 import { analyzePortfolio, type InsightType, type InsightSeverity } from "@/lib/portfolioIntelligence";
 import Tooltip from "@/components/Tooltip";
 
@@ -37,7 +37,9 @@ function loadProjects(): Project[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return JSON.parse(stored);
-  } catch {}
+  } catch {
+    // no-op
+  }
   // Initialize from seed
   const projects: Project[] = PROJECTS_SEED.map((p) => ({ ...p, toolStatuses: [] }));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
